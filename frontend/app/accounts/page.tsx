@@ -5,6 +5,7 @@ import Link from "next/link";
 import AppLayout from "@/components/layout/app-layout";
 import AccountCard from "@/components/wallet/account-card";
 import { useWallet } from "@/lib/wallet-context";
+import { getNetworkName } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export default function AccountsPage() {
       (account) =>
         account.name.toLowerCase().includes(query) ||
         account.address.toLowerCase().includes(query) ||
-        account.network.toLowerCase().includes(query)
+        getNetworkName(account.network).toLowerCase().includes(query)
     );
   }, [state.accounts, searchQuery]);
 
