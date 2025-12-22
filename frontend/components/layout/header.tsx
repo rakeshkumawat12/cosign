@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useWallet } from "@/lib/wallet-context";
-import { formatAddress } from "@/lib/mock-data";
+import { formatAddress } from "@/lib/utils";
 
 export default function Header() {
   const { state, connectWallet, disconnectWallet } = useWallet();
@@ -12,16 +13,18 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-3 group">
+            <Link href="/" className="flex items-center group relative">
               <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white font-extrabold text-xl">C</span>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+                <Image
+                  src="/logo.png"
+                  alt="CoSign Logo"
+                  width={180}
+                  height={45}
+                  className="h-10 w-auto sm:h-12 transition-all duration-300 group-hover:scale-105"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-green-500/20 rounded-lg blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
               </div>
-              <span className="text-2xl font-extrabold text-white tracking-tight">
-                Cosign
-              </span>
             </Link>
           </div>
 
@@ -53,7 +56,7 @@ export default function Header() {
             ) : (
               <button
                 onClick={connectWallet}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg shadow-cyan-500/20"
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-green-500 text-white font-bold rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg shadow-cyan-500/20"
               >
                 Connect Wallet
               </button>

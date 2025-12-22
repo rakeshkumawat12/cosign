@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import AppLayout from "@/components/layout/app-layout";
 import { useWallet } from "@/lib/wallet-context";
 import { MultisigAccount, Signer } from "@/lib/types";
-import { isValidAddress } from "@/lib/mock-data";
+import { isValidAddress } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
 

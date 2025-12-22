@@ -6,7 +6,7 @@
   :root {
     /* Crypto-native color system */
     --electric-cyan: 0 255 255;
-    --neon-purple: 138 43 226;
+    --neon-green: 34 197 94;
     --dark-matter: 10 10 15;
     --void-black: 0 0 0;
     --quantum-white: 255 255 255;
@@ -15,13 +15,35 @@
     --ghost-white: 248 250 252;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, rgb(var(--electric-cyan)) 0%, rgb(var(--neon-purple)) 100%);
-    --gradient-secondary: linear-gradient(135deg, rgb(var(--plasma-pink)) 0%, rgb(var(--neon-purple)) 100%);
+    --gradient-primary: linear-gradient(135deg, rgb(var(--electric-cyan)) 0%, rgb(var(--neon-green)) 100%);
+    --gradient-secondary: linear-gradient(135deg, rgb(var(--neon-green)) 0%, rgb(var(--electric-cyan)) 100%);
     --gradient-dark: linear-gradient(180deg, rgb(var(--dark-matter)) 0%, rgb(var(--void-black)) 100%);
 
     /* Glows */
     --glow-cyan: 0 0 20px rgba(var(--electric-cyan), 0.5), 0 0 40px rgba(var(--electric-cyan), 0.3);
-    --glow-purple: 0 0 20px rgba(var(--neon-purple), 0.5), 0 0 40px rgba(var(--neon-purple), 0.3);
+    --glow-green: 0 0 20px rgba(var(--neon-green), 0.5), 0 0 40px rgba(var(--neon-green), 0.3);
+
+    /* Shadcn UI variables */
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --radius: 0.5rem;
   }
 
   * {
@@ -44,8 +66,8 @@
     height: 100%;
     background:
       radial-gradient(ellipse 80% 50% at 50% -20%, rgba(var(--electric-cyan), 0.15), transparent),
-      radial-gradient(ellipse 60% 50% at 0% 100%, rgba(var(--neon-purple), 0.1), transparent),
-      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(var(--plasma-pink), 0.08), transparent);
+      radial-gradient(ellipse 60% 50% at 0% 100%, rgba(var(--neon-green), 0.1), transparent),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(var(--neon-green), 0.08), transparent);
     pointer-events: none;
     z-index: 0;
   }
@@ -85,14 +107,14 @@
   /* Neon button */
   .btn-neon {
     @apply relative px-8 py-4 font-bold text-white overflow-hidden rounded-xl;
-    @apply bg-gradient-to-r from-cyan-500 to-purple-600;
+    @apply bg-gradient-to-r from-cyan-500 to-green-500;
     @apply transition-all duration-300 transform hover:scale-105;
     box-shadow: var(--glow-cyan);
   }
 
   .btn-neon::before {
     content: "";
-    @apply absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-500;
+    @apply absolute inset-0 bg-gradient-to-r from-cyan-400 to-green-400;
     @apply opacity-0 transition-opacity duration-300;
   }
 
@@ -133,7 +155,7 @@
       box-shadow: 0 0 20px rgba(var(--electric-cyan), 0.4);
     }
     50% {
-      box-shadow: 0 0 40px rgba(var(--electric-cyan), 0.8), 0 0 60px rgba(var(--neon-purple), 0.4);
+      box-shadow: 0 0 40px rgba(var(--electric-cyan), 0.8), 0 0 60px rgba(var(--neon-green), 0.4);
     }
   }
 
@@ -145,15 +167,23 @@
 @layer utilities {
   /* Font utilities */
   .text-display {
-    @apply text-6xl md:text-8xl lg:text-9xl font-extrabold tracking-tighter;
+    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight;
   }
 
   .text-headline {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight;
+    @apply text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-snug;
   }
 
   .text-title {
-    @apply text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight;
+    @apply text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-snug;
+  }
+
+  .text-subtitle {
+    @apply text-xl sm:text-2xl font-semibold tracking-tight leading-normal;
+  }
+
+  .text-body {
+    @apply text-base sm:text-lg leading-relaxed;
   }
 
   /* Gradient text */
@@ -188,11 +218,11 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gradient-to-b from-cyan-500 to-purple-600 rounded-full;
+  @apply bg-gradient-to-b from-cyan-500 to-green-500 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply from-cyan-400 to-purple-500;
+  @apply from-cyan-400 to-green-400;
 }
 
 /* Selection */

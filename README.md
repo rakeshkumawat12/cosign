@@ -1,102 +1,143 @@
-# CoSign - Multisignature Wallet Protocol
+# CoSign
 
-> Protect your crypto with shared control. Require multiple approvals before any transaction is executed.
+**Multi-signature wallet for Ethereum. Require multiple approvals before executing transactions.**
 
-![CoSign Banner](https://img.shields.io/badge/CoSign-Multisig%20Wallet-cyan?style=for-the-badge)
-![Solidity](https://img.shields.io/badge/Solidity-0.8.27-blue?style=for-the-badge&logo=solidity)
-![Next.js](https://img.shields.io/badge/Next.js-15.5-black?style=for-the-badge&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.27-blue?style=flat-square)](https://soliditylang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square)](https://www.typescriptlang.org/)
 
 ---
 
-## 🚀 Quick Start
+## What is CoSign?
+
+CoSign is a multi-signature wallet that protects your crypto with shared control. Configure M-of-N approvals (e.g., 2-of-3, 3-of-5) so no single person can move funds alone.
+
+**Use cases:**
+- Team treasury management
+- Shared custody for DAOs
+- Personal security (split keys across devices)
+- Joint accounts
+
+---
+
+## Quick Start
 
 ```bash
-# 1. Clone the repository
-git clone <your-repo-url>
+# 1. Clone and install
+git clone <repo-url>
 cd cosign
-
-# 2. Install dependencies
 cd contracts && npm install
 cd ../frontend && npm install
 
-# 3. Start local Hardhat node (Terminal 1)
-cd contracts
-npx hardhat node
+# 2. Start local blockchain
+cd contracts && npx hardhat node
 
-# 4. Deploy contracts (Terminal 2)
-cd contracts
+# 3. Deploy contracts (new terminal)
 npx hardhat run scripts/deploy.ts --network localhost
 
-# 5. Start frontend (Terminal 3)
-cd frontend
-npm run dev
+# 4. Start frontend (new terminal)
+cd frontend && npm run dev
+```
 
-# 6. Open browser
-# Visit http://localhost:3000 (or :3002)
-# Connect MetaMask to Localhost network (Chain ID: 31337)
+Visit `http://localhost:3000` and connect MetaMask to Localhost network (Chain ID: 31337).
+
+**See [docs/setup.md](docs/setup.md) for detailed instructions.**
+
+---
+
+## Features
+
+✅ **Multi-signature security** - M-of-N approval threshold
+✅ **Transaction management** - Submit, approve, revoke, execute
+✅ **Factory pattern** - Deploy unlimited wallets
+✅ **Dark theme UI** - Responsive design for mobile and desktop
+✅ **MetaMask integration** - Connect and transact seamlessly
+
+---
+
+## Architecture
+
+```
+Frontend (Next.js + ethers.js)
+    ↓
+MultisigFactory.sol → Deploys new wallets
+    ↓
+MultisigWallet.sol → Manages transactions + approvals
+```
+
+**Read more:**
+- [Architecture Overview](docs/architecture.md)
+- [Smart Contracts](docs/smart-contracts.md)
+- [Frontend Details](docs/frontend.md)
+
+---
+
+## Project Structure
+
+```
+cosign/
+├── contracts/          # Solidity contracts + Hardhat
+├── frontend/           # Next.js app
+└── docs/              # Documentation
 ```
 
 ---
 
-## 📋 Features
+## Security
 
-### ✅ **Multi-Signature Security**
-- Threshold-based approvals (e.g., 2-of-3, 3-of-5)
-- Multiple owners per wallet
-- Secure on-chain execution
+⚠️ **This code has NOT been audited. Use at your own risk.**
 
-### ✅ **Transaction Management**
-- Submit transactions
-- Approve/revoke approvals
-- Execute when threshold is met
-- Full transaction history
+**Security features implemented:**
+- Reentrancy guard on execution
+- Owner-only transaction submission
+- Threshold validation
+- No duplicate approvals
+- Execute once per transaction
 
-### ✅ **Factory Pattern**
-- Deploy unlimited multisig wallets
-- Track all created wallets
-- Query wallets by owner
-
-### ✅ **Modern UI/UX**
-- Dark theme design
-- Real-time blockchain data
-- MetaMask integration
-- Responsive mobile design
+**Before mainnet deployment:**
+- Get professional audit
+- Test thoroughly on testnets
+- Review all contract code
+- Use hardware wallets for owner keys
 
 ---
 
-## 🔒 Security
+## Documentation
 
-### ⚠️ **Important Security Notes**
-
-- **NOT AUDITED** - This code has not been professionally audited
-- **Use at your own risk** - Test thoroughly before mainnet deployment
-- **Private keys** - Never expose private keys in frontend code
-
-### **Security Features**
-✅ Reentrancy guard on execution
-✅ Owner-only transaction submission
-✅ Threshold validation on deployment
-✅ No double approvals allowed
-✅ Execute once per transaction
+- **[Setup Guide](docs/setup.md)** - Installation and deployment
+- **[Architecture](docs/architecture.md)** - System design and data flow
+- **[Smart Contracts](docs/smart-contracts.md)** - Contract details and API
+- **[Frontend](docs/frontend.md)** - React components and state management
 
 ---
 
-## 📚 Documentation
+## Tech Stack
 
-- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** - Detailed integration documentation
-- **[Deployment Guide](INTEGRATION_GUIDE.md#-deployment-instructions)** - Step-by-step deployment
-- **[Architecture](INTEGRATION_GUIDE.md#-how-it-works)** - System architecture & flows
-- **[Troubleshooting](INTEGRATION_GUIDE.md#-troubleshooting)** - Common issues & solutions
+**Contracts:**
+- Solidity 0.8.27
+- Hardhat
+- OpenZeppelin (ReentrancyGuard)
+
+**Frontend:**
+- Next.js 15 (App Router)
+- TypeScript
+- Tailwind CSS
+- ethers.js v6
 
 ---
 
-## 📄 License
+## Networks
 
-This project is licensed under the MIT License.
+Currently supports:
+- **Localhost** (31337) - Development
+- **Sepolia** (11155111) - Testnet
 
 ---
 
-**Built with ❤️ by the CoSign team**
+## License
 
-Multi-Signature Wallet • Built on Ethereum • Open & Transparent
+MIT
+
+---
+
+**Built for the decentralized future.**

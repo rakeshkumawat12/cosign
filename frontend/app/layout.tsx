@@ -18,8 +18,15 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cosign - Multi-Signature Wallet",
-  description: "Secure multi-signature wallet for managing digital assets",
+  title: "CoSign - Multi-Signature Wallet",
+  description: "Secure multi-signature wallet for Ethereum. Require multiple approvals before executing transactions.",
+  keywords: ["multisig", "multi-signature", "ethereum", "wallet", "web3", "crypto", "security"],
+  authors: [{ name: "CoSign Team" }],
+  openGraph: {
+    title: "CoSign - Multi-Signature Wallet",
+    description: "Protect your crypto with shared control. Require multiple approvals before any transaction is executed.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

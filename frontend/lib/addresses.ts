@@ -5,10 +5,10 @@
 
 export const FACTORY_ADDRESSES: Record<number, string> = {
   // Local Hardhat
-  31337: process.env.NEXT_PUBLIC_FACTORY_ADDRESS || "",
+  31337: process.env.NEXT_PUBLIC_FACTORY_ADDRESS_LOCALHOST || "",
 
   // Sepolia Testnet
-  11155111: process.env.NEXT_PUBLIC_FACTORY_ADDRESS || "",
+  11155111: process.env.NEXT_PUBLIC_FACTORY_ADDRESS_SEPOLIA || "",
 
   // Ethereum Mainnet (when ready)
   // 1: "0x...",

@@ -1,5 +1,5 @@
 import { Transaction } from "@/lib/types";
-import { formatAddress, formatEth } from "@/lib/mock-data";
+import { formatAddress, formatEth } from "@/lib/utils";
 
 interface TransactionCardProps {
   transaction: Transaction;

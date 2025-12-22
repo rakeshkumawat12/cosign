@@ -1,5 +1,3 @@
-export type Network = "sepolia";
-
 export type TransactionStatus = "pending" | "executed" | "rejected";
 
 export interface Signer {
@@ -14,7 +12,7 @@ export interface MultisigAccount {
   balance: string;
   owners: Signer[];
   threshold: number;
-  network: Network;
+  network: number; // Chain ID (31337 for localhost, 11155111 for Sepolia)
   createdAt: number;
 }
 

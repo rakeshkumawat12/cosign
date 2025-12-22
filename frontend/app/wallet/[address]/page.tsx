@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import AppLayout from "@/components/layout/app-layout";
 import TransactionCard from "@/components/transactions/transaction-card";
 import { useWallet } from "@/lib/wallet-context";
-import { formatAddress, formatEth, getNetworkName, isValidAddress } from "@/lib/mock-data";
+import { formatAddress, formatEth, getNetworkName, isValidAddress } from "@/lib/utils";
 import { Transaction } from "@/lib/types";
 
 export const dynamic = 'force-dynamic';
@@ -210,12 +210,26 @@ export default function WalletDashboard() {
                 {account.owners.map((owner, idx) => (
                   <div
                     key={idx}
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 border-2 border-gray-900 flex items-center justify-center"
-                    title={owner.name || formatAddress(owner.address)}
+                    className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-green-500 border-2 border-gray-900 flex items-center justify-center relative group/owner cursor-help"
                   >
                     <span className="text-sm text-white font-medium">
                       {owner.name ? owner.name[0].toUpperCase() : "?"}
                     </span>
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg shadow-xl opacity-0 group-hover/owner:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                      <div className="text-xs text-white font-semibold mb-1">
+                        {owner.name || "Unknown"}
+                      </div>
+                      <div className="text-xs text-neutral-400 font-mono">
+                        {formatAddress(owner.address)}
+                      </div>
+                      {state.currentSigner?.toLowerCase() === owner.address.toLowerCase() && (
+                        <div className="text-xs text-cyan-400 mt-1 font-semibold">
+                          You
+                        </div>
+                      )}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-neutral-900 border-r border-b border-neutral-700 rotate-45"></div>
+                    </div>
                   </div>
                 ))}
               </div>

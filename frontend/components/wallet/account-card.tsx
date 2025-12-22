@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MultisigAccount } from "@/lib/types";
-import { formatAddress, formatEth, getNetworkName } from "@/lib/mock-data";
+import { formatAddress, formatEth, getNetworkName } from "@/lib/utils";
 
 interface AccountCardProps {
   account: MultisigAccount;
@@ -47,22 +47,46 @@ export default function AccountCard({ account }: AccountCardProps) {
               {account.owners.slice(0, 3).map((owner, idx) => (
                 <div
                   key={idx}
-                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 border-2 border-neutral-900 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg"
+                  className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-green-500 border-2 border-neutral-900 flex items-center justify-center transition-all duration-300 shadow-lg relative group/signer cursor-help"
                   style={{ transitionDelay: `${idx * 50}ms` }}
-                  title={owner.name || owner.address}
                 >
                   <span className="text-sm text-white font-bold">
                     {owner.name ? owner.name[0].toUpperCase() : "?"}
                   </span>
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg shadow-xl opacity-0 group-hover/signer:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                    <div className="text-xs text-white font-semibold mb-1">
+                      {owner.name || "Unknown"}
+                    </div>
+                    <div className="text-xs text-neutral-400 font-mono">
+                      {formatAddress(owner.address)}
+                    </div>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-neutral-900 border-r border-b border-neutral-700 rotate-45"></div>
+                  </div>
                 </div>
               ))}
               {account.owners.length > 3 && (
-                <div className="w-10 h-10 rounded-xl bg-neutral-800 border-2 border-neutral-900 flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                <div className="w-10 h-10 rounded-xl bg-neutral-800 border-2 border-neutral-900 flex items-center justify-center transition-all duration-300 relative group/more cursor-help"
                   style={{ transitionDelay: '150ms' }}
                 >
                   <span className="text-xs text-neutral-400 font-bold">
                     +{account.owners.length - 3}
                   </span>
+                  {/* Tooltip showing remaining signers */}
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-2 bg-neutral-900 border border-neutral-700 rounded-lg shadow-xl opacity-0 group-hover/more:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                    <div className="text-xs text-white font-semibold mb-2">
+                      {account.owners.length - 3} more signer{account.owners.length - 3 > 1 ? 's' : ''}
+                    </div>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {account.owners.slice(3).map((owner, idx) => (
+                        <div key={idx} className="text-xs">
+                          <div className="text-neutral-300">{owner.name || "Unknown"}</div>
+                          <div className="text-neutral-500 font-mono">{formatAddress(owner.address)}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-neutral-900 border-r border-b border-neutral-700 rotate-45"></div>
+                  </div>
                 </div>
               )}
             </div>

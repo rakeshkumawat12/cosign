@@ -174,15 +174,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         ]);
 
         const network = await providerInstance.getNetwork();
-        const networkName = network.chainId === 1n ? "Ethereum" :
-                           network.chainId === 11155111n ? "Sepolia" :
-                           network.chainId === 31337n ? "Localhost" : "Unknown";
 
         accounts.push({
           id: walletAddress, // Use wallet address as unique ID
           name: `Multisig ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
           address: walletAddress,
-          network: networkName as any,
+          network: Number(network.chainId), // Store chain ID as number
           balance: formatEther(balance),
           threshold: Number(threshold),
           owners: owners.map((addr: string) => ({ address: addr })),
