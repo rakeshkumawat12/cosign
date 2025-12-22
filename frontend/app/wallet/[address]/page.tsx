@@ -258,14 +258,14 @@ export default function WalletDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-800 mb-6">
+        <div className="border-b border-neutral-800 mb-6">
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab("transactions")}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "transactions"
-                  ? "border-indigo-500 text-indigo-400"
-                  : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700"
+                  ? "border-cyan-500 text-cyan-400"
+                  : "border-transparent text-neutral-400 hover:text-neutral-300 hover:border-neutral-700"
               }`}
             >
               Transactions
@@ -275,8 +275,8 @@ export default function WalletDashboard() {
                 onClick={() => setActiveTab("new-transaction")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === "new-transaction"
-                    ? "border-indigo-500 text-indigo-400"
-                    : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700"
+                    ? "border-cyan-500 text-cyan-400"
+                    : "border-transparent text-neutral-400 hover:text-neutral-300 hover:border-neutral-700"
                 }`}
               >
                 New Transaction
@@ -332,9 +332,9 @@ export default function WalletDashboard() {
 
             {transactions.length === 0 && (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
-                    className="w-8 h-8 text-gray-400"
+                    className="w-8 h-8 text-neutral-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -350,7 +350,7 @@ export default function WalletDashboard() {
                 <h3 className="text-lg font-medium text-white mb-2">
                   No transactions yet
                 </h3>
-                <p className="text-gray-400">
+                <p className="text-neutral-400">
                   Create your first transaction to get started
                 </p>
               </div>
@@ -360,14 +360,14 @@ export default function WalletDashboard() {
 
         {activeTab === "new-transaction" && (
           <div className="max-w-2xl">
-            <div className="bg-gray-900 rounded-lg border border-gray-800 p-8">
+            <div className="glass-card p-8">
               <h2 className="text-xl font-semibold text-white mb-6">
                 Create New Transaction
               </h2>
 
               <form onSubmit={handleSubmitTransaction}>
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
                     Recipient Address
                   </label>
                   <input
@@ -375,12 +375,12 @@ export default function WalletDashboard() {
                     value={recipientAddress}
                     onChange={(e) => setRecipientAddress(e.target.value)}
                     placeholder="0x..."
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm text-white placeholder-gray-500"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 font-mono text-sm text-white placeholder-neutral-500 transition-all duration-200"
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-neutral-300 mb-2">
                     Amount (ETH)
                   </label>
                   <input
@@ -388,18 +388,18 @@ export default function WalletDashboard() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.0"
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-white placeholder-gray-500"
+                    className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-neutral-500 transition-all duration-200"
                   />
                 </div>
 
                 {formError && (
-                  <div className="mb-6 p-3 bg-red-900/20 border border-red-800 rounded-lg">
+                  <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
                     <p className="text-sm text-red-400">{formError}</p>
                   </div>
                 )}
 
-                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
-                  <div className="text-sm text-gray-300">
+                <div className="bg-neutral-800/50 border border-neutral-700/50 rounded-lg p-4 mb-6">
+                  <div className="text-sm text-neutral-300">
                     This transaction will require{" "}
                     <span className="font-semibold text-white">
                       {account.threshold} of {account.owners.length}
@@ -411,7 +411,7 @@ export default function WalletDashboard() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-green-500 text-white font-bold rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center gap-2">

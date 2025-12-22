@@ -19,9 +19,9 @@ export default function TransactionCard({
   hasApproved,
 }: TransactionCardProps) {
   const statusColors = {
-    pending: "bg-yellow-100 text-yellow-800",
-    executed: "bg-green-100 text-green-800",
-    rejected: "bg-red-100 text-red-800",
+    pending: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+    executed: "bg-green-500/10 text-green-400 border border-green-500/20",
+    rejected: "bg-red-500/10 text-red-400 border border-red-500/20",
   };
 
   const formatDate = (timestamp: number) => {
@@ -35,38 +35,38 @@ export default function TransactionCard({
   };
 
   return (
-    <div className="border border-gray-200 rounded-lg p-6 bg-white">
+    <div className="glass-card p-6 hover:border-cyan-500/30 transition-all duration-300">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <span
-              className={`px-3 py-1 text-xs font-medium rounded-full ${
+              className={`px-3 py-1 text-xs font-bold rounded-full ${
                 statusColors[transaction.status]
               }`}
             >
               {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
             </span>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-neutral-400">
               {formatDate(transaction.createdAt)}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>To:</span>
+          <div className="flex items-center gap-2 text-sm text-neutral-300">
+            <span className="text-neutral-500">To:</span>
             <span className="font-mono">{formatAddress(transaction.to, 6)}</span>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-gray-900">
+          <div className="text-2xl font-bold text-white">
             {formatEth(transaction.value)}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-4 border-t border-neutral-700/30">
         <div className="flex items-center gap-2">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-neutral-400">
             Confirmations:{" "}
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-white">
               {transaction.confirmations.length} / {transaction.requiredConfirmations}
             </span>
           </div>
@@ -75,13 +75,13 @@ export default function TransactionCard({
               {transaction.confirmations.slice(0, 3).map((addr, idx) => (
                 <div
                   key={idx}
-                  className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 border-2 border-white"
+                  className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-green-500 border-2 border-neutral-900"
                   title={formatAddress(addr)}
                 />
               ))}
               {transaction.confirmations.length > 3 && (
-                <div className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
-                  <span className="text-xs text-gray-600">
+                <div className="w-6 h-6 rounded-full bg-neutral-800 border-2 border-neutral-900 flex items-center justify-center">
+                  <span className="text-xs text-neutral-400">
                     +{transaction.confirmations.length - 3}
                   </span>
                 </div>
@@ -95,10 +95,10 @@ export default function TransactionCard({
             <button
               onClick={onApprove}
               disabled={!canApprove || hasApproved}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`px-4 py-2 text-sm font-bold rounded-lg transition-all duration-300 ${
                 !canApprove || hasApproved
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-indigo-600 text-white hover:bg-indigo-700"
+                  ? "bg-neutral-800 text-neutral-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-cyan-500 to-green-500 text-white hover:scale-105 shadow-lg shadow-cyan-500/20"
               }`}
             >
               {hasApproved ? "Approved" : "Approve"}
@@ -106,10 +106,10 @@ export default function TransactionCard({
             <button
               onClick={onExecute}
               disabled={!canExecute}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`px-4 py-2 text-sm font-bold rounded-lg transition-all duration-300 ${
                 !canExecute
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-green-600 text-white hover:bg-green-700"
+                  ? "bg-neutral-800 text-neutral-500 cursor-not-allowed"
+                  : "bg-green-600 text-white hover:bg-green-700 hover:scale-105"
               }`}
             >
               Execute
@@ -118,7 +118,7 @@ export default function TransactionCard({
         )}
 
         {transaction.status === "executed" && transaction.executedAt && (
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-neutral-400">
             Executed on {formatDate(transaction.executedAt)}
           </div>
         )}
