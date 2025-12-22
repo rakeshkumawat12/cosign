@@ -144,7 +144,7 @@ export default function WalletDashboard() {
 
     try {
       // Submit transaction to smart contract
-      await submitTransaction(address, recipientAddress, amount);
+      await submitTransaction(address, recipientAddress, amount, "0x");
 
       // Clear form and switch to transactions tab
       setRecipientAddress("");

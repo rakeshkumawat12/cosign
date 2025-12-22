@@ -28,7 +28,7 @@ export default function CreateAccountPage() {
     } else if (state.wallet.address && signers[0]?.address === "") {
       setSigners([{ address: state.wallet.address, name: "You" }]);
     }
-  }, [state.wallet.isConnected, state.wallet.address, router]);
+  }, [state.wallet.isConnected, state.wallet.address, router, signers]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const addSigner = () => {
