@@ -1,9 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { BrowserProvider, Contract, formatEther, parseEther } from "ethers";
 import { AppState, MultisigAccount, Transaction } from "./types";
-import { useEthersProvider, useEthersSigner, useFactoryContract, useMultisigContract } from "./hooks";
 import { getFactoryAddress } from "./addresses";
 
 interface WalletContextType {
@@ -33,9 +32,70 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     currentSigner: null,
   });
 
-  const provider = useEthersProvider();
-  const signer = useEthersSigner();
-  const { factory } = useFactoryContract();
+  // Note: We create fresh provider/signer instances in each function
+  // instead of using hooks to avoid timing issues with wallet connection
+
+  // Check if wallet is already connected on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      if (typeof window === 'undefined' || !window.ethereum) return;
+
+      try {
+        const provider = new BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_accounts", []);
+
+        if (accounts.length > 0) {
+          // Wallet is already connected
+          const network = await provider.getNetwork();
+          const signer = await provider.getSigner();
+          const address = await signer.getAddress();
+
+          setState((prev) => ({
+            ...prev,
+            wallet: {
+              isConnected: true,
+              address,
+              chainId: Number(network.chainId),
+            },
+            currentSigner: address,
+          }));
+
+          // Load accounts
+          await loadAccountsInternal(address, provider);
+        }
+      } catch (error) {
+        console.error("Failed to check wallet connection:", error);
+      }
+    };
+
+    checkConnection();
+
+    // Listen for account changes
+    if (window.ethereum) {
+      const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts.length === 0) {
+          // User disconnected
+          disconnectWallet();
+        } else {
+          // Account changed - reconnect
+          checkConnection();
+        }
+      };
+
+      const handleChainChanged = () => {
+        // Chain changed - reload page to reset state
+        window.location.reload();
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+
+      return () => {
+        window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum?.removeListener('chainChanged', handleChainChanged);
+      };
+    }
+  }, []);
 
   // Connect wallet using MetaMask
   const connectWallet = async () => {
@@ -85,8 +145,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   // Load accounts for connected wallet
   const loadAccountsInternal = async (userAddress: string, providerInstance: BrowserProvider) => {
-    if (!factory) return;
-
     try {
       const chainId = (await providerInstance.getNetwork()).chainId;
       const factoryAddress = getFactoryAddress(Number(chainId));
@@ -121,12 +179,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
                            network.chainId === 31337n ? "Localhost" : "Unknown";
 
         accounts.push({
+          id: walletAddress, // Use wallet address as unique ID
           name: `Multisig ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
           address: walletAddress,
           network: networkName as any,
           balance: formatEther(balance),
           threshold: Number(threshold),
           owners: owners.map((addr: string) => ({ address: addr })),
+          createdAt: Date.now(), // Add creation timestamp
         });
       }
 
@@ -141,24 +201,42 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   // Public load accounts
   const loadAccounts = async () => {
-    if (!state.wallet.address || !provider) return;
-    await loadAccountsInternal(state.wallet.address, provider);
+    if (!state.wallet.address || !window.ethereum) return;
+
+    try {
+      const provider = new BrowserProvider(window.ethereum);
+      await loadAccountsInternal(state.wallet.address, provider);
+    } catch (error) {
+      console.error("Failed to load accounts:", error);
+    }
   };
 
   // Create new multisig account
   const createAccount = async (owners: string[], threshold: number, name: string): Promise<string> => {
-    if (!factory || !signer) {
+    if (!state.wallet.isConnected || !window.ethereum) {
       throw new Error("Wallet not connected");
     }
 
     try {
-      const tx = await factory.createMultisig(owners, threshold);
+      // Get fresh provider and signer
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const network = await provider.getNetwork();
+      const chainId = Number(network.chainId);
+      const factoryAddress = getFactoryAddress(chainId);
+
+      // Get factory contract
+      const MultisigFactoryABI = (await import("../../contracts/artifacts/contracts/MultisigFactory.sol/MultisigFactory.json")).abi;
+      const factoryContract = new Contract(factoryAddress, MultisigFactoryABI, signer);
+
+      // Deploy multisig
+      const tx = await factoryContract.createMultisig(owners, threshold);
       const receipt = await tx.wait();
 
       // Find MultisigCreated event to get wallet address
       const event = receipt.logs.find((log: any) => {
         try {
-          const parsed = factory.interface.parseLog(log);
+          const parsed = factoryContract.interface.parseLog(log);
           return parsed?.name === "MultisigCreated";
         } catch {
           return false;
@@ -166,11 +244,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       });
 
       if (event) {
-        const parsed = factory.interface.parseLog(event);
+        const parsed = factoryContract.interface.parseLog(event);
         const walletAddress = parsed?.args[0];
 
         // Reload accounts
-        await loadAccounts();
+        await loadAccountsInternal(state.wallet.address!, provider);
 
         return walletAddress;
       }
@@ -184,9 +262,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   // Submit transaction
   const submitTransaction = async (multisigAddress: string, to: string, value: string, data: string = "0x") => {
-    if (!signer) throw new Error("Wallet not connected");
+    if (!state.wallet.isConnected || !window.ethereum) {
+      throw new Error("Wallet not connected");
+    }
 
     try {
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
       const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
       const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
 
@@ -204,9 +287,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   // Approve transaction
   const approveTransaction = async (multisigAddress: string, txId: number) => {
-    if (!signer) throw new Error("Wallet not connected");
+    if (!state.wallet.isConnected || !window.ethereum) {
+      throw new Error("Wallet not connected");
+    }
 
     try {
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
       const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
       const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
 
@@ -223,9 +311,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   // Revoke approval
   const revokeApproval = async (multisigAddress: string, txId: number) => {
-    if (!signer) throw new Error("Wallet not connected");
+    if (!state.wallet.isConnected || !window.ethereum) {
+      throw new Error("Wallet not connected");
+    }
 
     try {
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
       const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
       const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
 
@@ -242,9 +335,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   // Execute transaction
   const executeTransaction = async (multisigAddress: string, txId: number) => {
-    if (!signer) throw new Error("Wallet not connected");
+    if (!state.wallet.isConnected || !window.ethereum) {
+      throw new Error("Wallet not connected");
+    }
 
     try {
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
       const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
       const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
 
@@ -261,9 +359,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   // Load transactions for a wallet
   const loadTransactions = async (multisigAddress: string) => {
-    if (!signer) return;
+    if (!state.wallet.isConnected || !window.ethereum) return;
 
     try {
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
       const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
       const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
 
@@ -281,12 +382,12 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           id: i.toString(),
           multisigAddress,
           to,
-          amount: formatEther(value),
+          value: formatEther(value),
           data: data === "0x" ? undefined : data,
           status: executed ? "executed" : "pending",
           confirmations: approvals,
           requiredConfirmations: threshold,
-          submittedAt: Date.now(), // We don't have this on-chain
+          createdAt: Date.now(), // We don't have this on-chain
           executedAt: executed ? Date.now() : undefined,
         });
       }

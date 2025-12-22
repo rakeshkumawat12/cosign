@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export default function CreateAccountPage() {
   const router = useRouter();
-  const { state, addAccount } = useWallet();
+  const { state, createAccount } = useWallet();
 
   const [accountName, setAccountName] = useState("");
   const [network] = useState<"sepolia">("sepolia");
@@ -19,6 +19,7 @@ export default function CreateAccountPage() {
     { address: "", name: "" },
   ]);
   const [threshold, setThreshold] = useState(1);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Auto-fill first signer with connected wallet
   useEffect(() => {
@@ -83,24 +84,30 @@ export default function CreateAccountPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) return;
 
-    const newAccount: MultisigAccount = {
-      id: `acc-${Date.now()}`,
-      name: accountName,
-      address: `0x${Math.random().toString(16).slice(2, 42).padEnd(40, "0")}`,
-      balance: "0",
-      owners: signers,
-      threshold,
-      network,
-      createdAt: Date.now(),
-    };
+    setIsCreating(true);
 
-    addAccount(newAccount);
-    router.push("/accounts");
+    try {
+      // Extract owner addresses
+      const ownerAddresses = signers.map((s) => s.address);
+
+      // Create multisig via smart contract
+      const walletAddress = await createAccount(ownerAddresses, threshold, accountName);
+
+      console.log("Created multisig wallet at:", walletAddress);
+
+      // Success - redirect to accounts page
+      router.push("/accounts");
+    } catch (error: any) {
+      console.error("Failed to create account:", error);
+      alert(error.message || "Failed to create account. Please try again.");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   if (!state.wallet.isConnected) {
@@ -325,13 +332,26 @@ export default function CreateAccountPage() {
             </button>
             <button
               type="submit"
-              className="flex-1 btn-neon group"
+              disabled={isCreating}
+              className="flex-1 btn-neon group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                Create Account
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                {isCreating ? (
+                  <>
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating on-chain...
+                  </>
+                ) : (
+                  <>
+                    Create Account
+                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </>
+                )}
               </span>
             </button>
           </div>

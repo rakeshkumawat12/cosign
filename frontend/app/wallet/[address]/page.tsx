@@ -16,13 +16,18 @@ export default function WalletDashboard() {
   const params = useParams();
   const router = useRouter();
   const address = params.address as string;
-  const { state, addTransaction, approveTransaction, executeTransaction } = useWallet();
+  const { state, submitTransaction, approveTransaction, executeTransaction, revokeApproval, loadTransactions } = useWallet();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!state.wallet.isConnected) {
       router.push("/accounts");
+    } else if (address) {
+      // Load transactions for this wallet
+      loadTransactions(address);
     }
-  }, [state.wallet.isConnected, router]);
+  }, [state.wallet.isConnected, router, address, loadTransactions]);
   const [activeTab, setActiveTab] = useState<TabType>("transactions");
   const [recipientAddress, setRecipientAddress] = useState("");
   const [amount, setAmount] = useState("");
@@ -63,8 +68,8 @@ export default function WalletDashboard() {
     return (
       <AppLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Account Not Found</h2>
-          <p className="text-gray-600 mb-6">
+          <h2 className="text-2xl font-bold text-white mb-4">Account Not Found</h2>
+          <p className="text-gray-400 mb-6">
             The account you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
           </p>
           <button
@@ -78,15 +83,44 @@ export default function WalletDashboard() {
     );
   }
 
-  const handleApprove = (txId: string) => {
-    approveTransaction(address, txId);
+  const handleApprove = async (txId: string) => {
+    try {
+      await approveTransaction(address, parseInt(txId));
+    } catch (error: any) {
+      console.error("Failed to approve transaction:", error);
+      alert(error.message || "Failed to approve transaction");
+    }
   };
 
-  const handleExecute = (txId: string) => {
-    executeTransaction(address, txId);
+  const handleExecute = async (txId: string) => {
+    try {
+      await executeTransaction(address, parseInt(txId));
+    } catch (error: any) {
+      console.error("Failed to execute transaction:", error);
+      alert(error.message || "Failed to execute transaction");
+    }
   };
 
-  const handleSubmitTransaction = (e: React.FormEvent) => {
+  const handleRevoke = async (txId: string) => {
+    try {
+      await revokeApproval(address, parseInt(txId));
+    } catch (error: any) {
+      console.error("Failed to revoke approval:", error);
+      alert(error.message || "Failed to revoke approval");
+    }
+  };
+
+  const handleCopyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(account?.address || address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy address:", error);
+    }
+  };
+
+  const handleSubmitTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
 
@@ -106,59 +140,77 @@ export default function WalletDashboard() {
       return;
     }
 
-    const newTransaction: Transaction = {
-      id: `tx-${Date.now()}`,
-      multisigAddress: address,
-      to: recipientAddress,
-      value: amount,
-      status: "pending",
-      confirmations: [],
-      requiredConfirmations: account.threshold,
-      createdAt: Date.now(),
-    };
+    setIsSubmitting(true);
 
-    addTransaction(newTransaction);
-    setRecipientAddress("");
-    setAmount("");
-    setActiveTab("transactions");
+    try {
+      // Submit transaction to smart contract
+      await submitTransaction(address, recipientAddress, amount);
+
+      // Clear form and switch to transactions tab
+      setRecipientAddress("");
+      setAmount("");
+      setActiveTab("transactions");
+    } catch (error: any) {
+      console.error("Failed to submit transaction:", error);
+      setFormError(error.message || "Failed to submit transaction");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <AppLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Wallet Summary */}
-        <div className="bg-white rounded-lg border border-gray-200 p-8 mb-8">
+        <div className="bg-gray-900 rounded-lg border border-gray-800 p-8 mb-8">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-white mb-2">
                 {account.name}
               </h1>
-              <p className="text-sm font-mono text-gray-500 mb-3">
-                {formatAddress(account.address, 8)}
-              </p>
-              <div className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
+              <div className="flex items-center gap-2 mb-3">
+                <p className="text-sm font-mono text-gray-400">
+                  {formatAddress(account.address, 8)}
+                </p>
+                <button
+                  onClick={handleCopyAddress}
+                  className="p-1.5 hover:bg-gray-800 rounded-md transition-colors group"
+                  title={copied ? "Copied!" : "Copy address"}
+                >
+                  {copied ? (
+                    <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 text-gray-400 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              <div className="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-400 text-xs font-medium rounded-full">
                 {getNetworkName(account.network)}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm text-gray-500 mb-1">Balance</div>
-              <div className="text-4xl font-bold text-gray-900">
+              <div className="text-sm text-gray-400 mb-1">Balance</div>
+              <div className="text-4xl font-bold text-white">
                 {formatEth(account.balance)}
               </div>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+          <div className="grid md:grid-cols-3 gap-6 pt-6 border-t border-gray-800">
             <div>
-              <div className="text-sm text-gray-500 mb-1">Owners</div>
-              <div className="text-2xl font-semibold text-gray-900">
+              <div className="text-sm text-gray-400 mb-1">Owners</div>
+              <div className="text-2xl font-semibold text-white">
                 {account.owners.length}
               </div>
               <div className="flex -space-x-2 mt-2">
                 {account.owners.map((owner, idx) => (
                   <div
                     key={idx}
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 border-2 border-white flex items-center justify-center"
+                    className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 border-2 border-gray-900 flex items-center justify-center"
                     title={owner.name || formatAddress(owner.address)}
                   >
                     <span className="text-sm text-white font-medium">
@@ -170,21 +222,21 @@ export default function WalletDashboard() {
             </div>
 
             <div>
-              <div className="text-sm text-gray-500 mb-1">Threshold</div>
-              <div className="text-2xl font-semibold text-gray-900">
+              <div className="text-sm text-gray-400 mb-1">Threshold</div>
+              <div className="text-2xl font-semibold text-white">
                 {account.threshold} of {account.owners.length}
               </div>
-              <div className="text-sm text-gray-600 mt-1">
+              <div className="text-sm text-gray-300 mt-1">
                 Required confirmations
               </div>
             </div>
 
             <div>
-              <div className="text-sm text-gray-500 mb-1">Pending Transactions</div>
-              <div className="text-2xl font-semibold text-gray-900">
+              <div className="text-sm text-gray-400 mb-1">Pending Transactions</div>
+              <div className="text-2xl font-semibold text-white">
                 {pendingTransactions.length}
               </div>
-              <div className="text-sm text-gray-600 mt-1">
+              <div className="text-sm text-gray-300 mt-1">
                 Awaiting approval
               </div>
             </div>
@@ -192,14 +244,14 @@ export default function WalletDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-6">
+        <div className="border-b border-gray-800 mb-6">
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab("transactions")}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "transactions"
-                  ? "border-indigo-500 text-indigo-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-indigo-500 text-indigo-400"
+                  : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700"
               }`}
             >
               Transactions
@@ -209,8 +261,8 @@ export default function WalletDashboard() {
                 onClick={() => setActiveTab("new-transaction")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === "new-transaction"
-                    ? "border-indigo-500 text-indigo-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-indigo-500 text-indigo-400"
+                    : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700"
                 }`}
               >
                 New Transaction
@@ -224,7 +276,7 @@ export default function WalletDashboard() {
           <div className="space-y-6">
             {pendingTransactions.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-white mb-4">
                   Pending ({pendingTransactions.length})
                 </h3>
                 <div className="space-y-4">
@@ -245,7 +297,7 @@ export default function WalletDashboard() {
 
             {executedTransactions.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-white mb-4">
                   History ({executedTransactions.length})
                 </h3>
                 <div className="space-y-4">
@@ -266,7 +318,7 @@ export default function WalletDashboard() {
 
             {transactions.length === 0 && (
               <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg
                     className="w-8 h-8 text-gray-400"
                     fill="none"
@@ -281,10 +333,10 @@ export default function WalletDashboard() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-white mb-2">
                   No transactions yet
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-400">
                   Create your first transaction to get started
                 </p>
               </div>
@@ -294,14 +346,14 @@ export default function WalletDashboard() {
 
         {activeTab === "new-transaction" && (
           <div className="max-w-2xl">
-            <div className="bg-white rounded-lg border border-gray-200 p-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <div className="bg-gray-900 rounded-lg border border-gray-800 p-8">
+              <h2 className="text-xl font-semibold text-white mb-6">
                 Create New Transaction
               </h2>
 
               <form onSubmit={handleSubmitTransaction}>
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Recipient Address
                   </label>
                   <input
@@ -309,12 +361,12 @@ export default function WalletDashboard() {
                     value={recipientAddress}
                     onChange={(e) => setRecipientAddress(e.target.value)}
                     placeholder="0x..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm text-white placeholder-gray-500"
                   />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Amount (ETH)
                   </label>
                   <input
@@ -322,20 +374,20 @@ export default function WalletDashboard() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.0"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-white placeholder-gray-500"
                   />
                 </div>
 
                 {formError && (
-                  <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-600">{formError}</p>
+                  <div className="mb-6 p-3 bg-red-900/20 border border-red-800 rounded-lg">
+                    <p className="text-sm text-red-400">{formError}</p>
                   </div>
                 )}
 
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-                  <div className="text-sm text-gray-600">
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
+                  <div className="text-sm text-gray-300">
                     This transaction will require{" "}
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-white">
                       {account.threshold} of {account.owners.length}
                     </span>{" "}
                     approvals before it can be executed.
@@ -344,9 +396,20 @@ export default function WalletDashboard() {
 
                 <button
                   type="submit"
-                  className="w-full px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                  disabled={isSubmitting}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-xl hover:scale-105 transition-transform duration-300 shadow-lg shadow-cyan-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
-                  Submit Transaction
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Submitting on-chain...
+                    </span>
+                  ) : (
+                    "Submit Transaction"
+                  )}
                 </button>
               </form>
             </div>
