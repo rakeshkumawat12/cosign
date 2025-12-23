@@ -1,6 +1,6 @@
 # CoSign
 
-**Multi-signature wallet for Ethereum. Require multiple approvals before executing transactions.**
+**Multi-signature wallet for Ethereum. Require multiple approvals before executing transactions. ETH never belongs to any owner directly once inside the multisig.**
 
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.27-blue?style=flat-square)](https://soliditylang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square)](https://nextjs.org/)
@@ -17,6 +17,12 @@ CoSign is a multi-signature wallet that protects your crypto with shared control
 - Shared custody for DAOs
 - Personal security (split keys across devices)
 - Joint accounts
+
+### Visual Overview
+
+![CoSign Architecture Overview](frontend/public/images/cosign-overview.png)
+
+*Complete user flow from landing page to wallet management and transaction execution*
 
 ---
 

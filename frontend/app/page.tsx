@@ -52,37 +52,80 @@ export default function LandingPage() {
       {/* Visual Section */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 hidden sm:block">
         <div className="relative h-64 md:h-80 flex items-center justify-center">
-          {/* Card 1 */}
+          {/* Card 1 - Treasury Wallet */}
           <div className="absolute left-[10%] md:left-[20%] w-56 sm:w-64 md:w-80 h-36 sm:h-40 md:h-48 glass-card p-4 sm:p-6 rotate-[-3deg] hover:rotate-0 transition-transform duration-300 shadow-2xl">
-            <div className="flex items-center gap-3 mb-3 sm:mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-cyan-500 to-green-500"></div>
-              <div className="flex-1 h-3 sm:h-4 bg-neutral-700/50 rounded"></div>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-cyan-500 to-green-500 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm font-bold text-white">Treasury</p>
+                  <p className="text-xs text-neutral-500 font-mono">0x7a9f...4e2b</p>
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <div className="h-2 sm:h-3 bg-neutral-700/30 rounded w-3/4"></div>
-              <div className="h-2 sm:h-3 bg-neutral-700/30 rounded w-1/2"></div>
+            <div className="space-y-2 mb-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-neutral-400">Balance</span>
+                <span className="text-sm sm:text-base font-bold text-white">12.5 ETH</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-neutral-400">Network</span>
+                <span className="text-xs text-neutral-300">Sepolia</span>
+              </div>
             </div>
-            <div className="mt-3 sm:mt-4 flex gap-2">
+            <div className="flex items-center justify-between pt-2 border-t border-neutral-700/30">
               <div className="px-2 sm:px-3 py-1 sm:py-1.5 bg-cyan-500/10 border border-cyan-500/20 rounded text-xs text-cyan-400 font-bold">
                 2/3 Required
+              </div>
+              <div className="flex -space-x-1">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-green-500 border-2 border-neutral-900"></div>
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-green-500 to-cyan-500 border-2 border-neutral-900"></div>
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-400 to-green-400 border-2 border-neutral-900"></div>
               </div>
             </div>
           </div>
 
-          {/* Card 2 */}
+          {/* Card 2 - Pending Transaction */}
           <div className="absolute right-[10%] md:right-[20%] w-56 sm:w-64 md:w-80 h-36 sm:h-40 md:h-48 glass-card p-4 sm:p-6 rotate-[3deg] hover:rotate-0 transition-transform duration-300 shadow-2xl">
-            <div className="flex items-center gap-3 mb-3 sm:mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-green-500 to-cyan-500"></div>
-              <div className="flex-1 h-3 sm:h-4 bg-neutral-700/50 rounded"></div>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs sm:text-sm font-bold text-white">Send ETH</p>
+                  <p className="text-xs text-neutral-500">Dec 22, 2024</p>
+                </div>
+              </div>
+              <div className="px-2 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded text-xs text-yellow-400 font-bold">
+                Pending
+              </div>
             </div>
-            <div className="space-y-2">
-              <div className="h-2 sm:h-3 bg-neutral-700/30 rounded w-2/3"></div>
-              <div className="h-2 sm:h-3 bg-neutral-700/30 rounded w-5/6"></div>
+            <div className="space-y-2 mb-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-neutral-400">To</span>
+                <span className="text-xs text-neutral-300 font-mono">0x4b3c...8d1f</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-neutral-400">Amount</span>
+                <span className="text-sm sm:text-base font-bold text-white">2.0 ETH</span>
+              </div>
             </div>
-            <div className="mt-3 sm:mt-4 flex -space-x-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-cyan-500 to-green-500 border-2 border-neutral-900"></div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-green-500 to-cyan-500 border-2 border-neutral-900"></div>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-cyan-400 to-green-400 border-2 border-neutral-900"></div>
+            <div className="flex items-center justify-between pt-2 border-t border-neutral-700/30">
+              <div className="text-xs text-neutral-400">
+                Confirmations: <span className="font-semibold text-white">2/3</span>
+              </div>
+              <div className="flex -space-x-1">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-green-500 border-2 border-neutral-900"></div>
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-green-500 to-cyan-500 border-2 border-neutral-900"></div>
+                <div className="w-5 h-5 rounded-full bg-neutral-700 border-2 border-neutral-900"></div>
+              </div>
             </div>
           </div>
         </div>
