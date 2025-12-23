@@ -4,6 +4,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { BrowserProvider, Contract, formatEther, parseEther } from "ethers";
 import { AppState, MultisigAccount, Transaction } from "./types";
 import { getFactoryAddress } from "./addresses";
+import MultisigFactoryABI from "./abis/MultisigFactory.json";
+import MultisigWalletABI from "./abis/MultisigWallet.json";
 
 interface WalletContextType {
   state: AppState;
@@ -153,7 +155,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const factorySigner = await providerInstance.getSigner();
       const factoryContract = new Contract(
         factoryAddress,
-        (await import("../../contracts/artifacts/contracts/MultisigFactory.sol/MultisigFactory.json")).abi,
+        MultisigFactoryABI.abi,
         factorySigner
       );
 
@@ -164,8 +166,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const accounts: MultisigAccount[] = [];
 
       for (const walletAddress of walletAddresses) {
-        const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
-        const walletContract = new Contract(walletAddress, MultisigWalletABI, factorySigner);
+        const walletContract = new Contract(walletAddress, MultisigWalletABI.abi, factorySigner);
 
         const [owners, threshold, balance] = await Promise.all([
           walletContract.getOwners(),
@@ -223,8 +224,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const factoryAddress = getFactoryAddress(chainId);
 
       // Get factory contract
-      const MultisigFactoryABI = (await import("../../contracts/artifacts/contracts/MultisigFactory.sol/MultisigFactory.json")).abi;
-      const factoryContract = new Contract(factoryAddress, MultisigFactoryABI, signer);
+      const factoryContract = new Contract(factoryAddress, MultisigFactoryABI.abi, signer);
 
       // Deploy multisig
       const tx = await factoryContract.createMultisig(owners, threshold);
@@ -267,8 +267,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
-      const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
-      const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
+      const walletContract = new Contract(multisigAddress, MultisigWalletABI.abi, signer);
 
       const valueInWei = parseEther(value);
       const tx = await walletContract.submitTransaction(to, valueInWei, data);
@@ -292,8 +291,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
-      const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
-      const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
+      const walletContract = new Contract(multisigAddress, MultisigWalletABI.abi, signer);
 
       const tx = await walletContract.approveTransaction(txId);
       await tx.wait();
@@ -316,8 +314,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
-      const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
-      const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
+      const walletContract = new Contract(multisigAddress, MultisigWalletABI.abi, signer);
 
       const tx = await walletContract.revokeApproval(txId);
       await tx.wait();
@@ -340,8 +337,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
-      const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
-      const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
+      const walletContract = new Contract(multisigAddress, MultisigWalletABI.abi, signer);
 
       const tx = await walletContract.executeTransaction(txId);
       await tx.wait();
@@ -362,8 +358,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       const provider = new BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
 
-      const MultisigWalletABI = (await import("../../contracts/artifacts/contracts/MultisigWallet.sol/MultisigWallet.json")).abi;
-      const walletContract = new Contract(multisigAddress, MultisigWalletABI, signer);
+      const walletContract = new Contract(multisigAddress, MultisigWalletABI.abi, signer);
 
       const txCount = await walletContract.getTransactionCount();
       const transactions: Transaction[] = [];
