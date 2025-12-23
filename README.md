@@ -1,6 +1,6 @@
 # CoSign
 
-**Multi-signature wallet for Ethereum. Require multiple approvals before executing transactions. ETH never belongs to any owner directly once inside the multisig.**
+**Multi-signature wallet for Ethereum. Require multiple approvals before executing transactions.**
 
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.27-blue?style=flat-square)](https://soliditylang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square)](https://nextjs.org/)
@@ -8,73 +8,247 @@
 
 ---
 
-## What is CoSign?
+## The Problem
 
-CoSign is a multi-signature wallet that protects your crypto with shared control. Configure M-of-N approvals (e.g., 2-of-3, 3-of-5) so no single person can move funds alone.
+Traditional single-key wallets create critical vulnerabilities:
 
-**Use cases:**
-- Team treasury management
-- Shared custody for DAOs
-- Personal security (split keys across devices)
-- Joint accounts
+- **Single point of failure** - One compromised private key = total fund loss
+- **No accountability** - Any keyholder can drain funds without oversight
+- **Insider risk** - Teams must trust one person with treasury access
+- **No recovery** - Lost key = permanently lost funds
 
-### Visual Overview
-
-![CoSign Architecture Overview](frontend/public/images/cosign-overview.png)
-
-*Complete user flow from landing page to wallet management and transaction execution*
+DAOs, startups, and teams managing shared treasuries face impossible choices: centralize control (risky) or distribute keys without safeguards (riskier).
 
 ---
 
-## Quick Start
+## The Solution
 
-```bash
-# 1. Clone and install
-git clone <repo-url>
-cd cosign
-cd contracts && npm install
-cd ../frontend && npm install
+CoSign implements **M-of-N multisig** where transactions require multiple approvals before execution. No single person can move funds alone.
 
-# 2. Start local blockchain
-cd contracts && npx hardhat node
+**Why CoSign?**
 
-# 3. Deploy contracts (new terminal)
-npx hardhat run scripts/deploy.ts --network localhost
+- **Trustless execution** - Smart contracts enforce approval rules, not people
+- **Fully on-chain** - All data stored on Ethereum, no centralized backend
+- **Flexible thresholds** - Configure 2-of-3, 3-of-5, or any M-of-N combination
+- **Factory pattern** - Deploy unlimited wallets with different owners/thresholds
+- **Built for teams** - DAOs, startups, shared custody, personal security
 
-# 4. Start frontend (new terminal)
-cd frontend && npm run dev
-```
-
-Visit `http://localhost:3000` and connect MetaMask to Localhost network (Chain ID: 31337).
-
-**See [docs/setup.md](docs/setup.md) for detailed instructions.**
-
----
-
-## Features
-
-✅ **Multi-signature security** - M-of-N approval threshold
-✅ **Transaction management** - Submit, approve, revoke, execute
-✅ **Factory pattern** - Deploy unlimited wallets
-✅ **Dark theme UI** - Responsive design for mobile and desktop
-✅ **MetaMask integration** - Connect and transact seamlessly
+Once ETH enters a CoSign wallet, **no individual owner controls it**. Only collective approval can execute transactions.
 
 ---
 
 ## Architecture
 
+![CoSign Architecture Overview](frontend/public/images/cosign-overview.png)
+
+**System Flow:**
+
 ```
-Frontend (Next.js + ethers.js)
-    ↓
-MultisigFactory.sol → Deploys new wallets
-    ↓
-MultisigWallet.sol → Manages transactions + approvals
+User → Frontend (Next.js) → ethers.js → MetaMask
+                                ↓
+                    MultisigFactory.sol (deploys)
+                                ↓
+                    MultisigWallet.sol (executes)
+                                ↓
+                         Ethereum Network
 ```
 
-**Read more:**
-- [Architecture Overview](docs/architecture.md)
-- [Smart Contracts](docs/smart-contracts.md)
-- [Frontend Details](docs/frontend.md)
+**Smart Contracts:**
+
+- **MultisigFactory** - Deploys new multisig wallets, tracks ownership
+- **MultisigWallet** - Manages transactions, approvals, and execution
+
+**Frontend:**
+
+- Next.js 15 (App Router) + TypeScript
+- ethers.js v6 for blockchain interaction
+- Real-time wallet/transaction state management
+
+---
+
+## Transaction Lifecycle
+
+### 1. Wallet Creation
+
+**User Action:** Connect wallet → Create account → Define owners + threshold
+
+**On-Chain:**
+```solidity
+MultisigFactory.createMultisig(owners[], threshold)
+  → Deploys new MultisigWallet instance
+  → Emits MultisigCreated(walletAddress, owners, threshold)
+```
+
+**Result:** New multisig wallet address stored in factory registry
+
+---
+
+### 2. Transaction Proposal
+
+**User Action:** Submit transaction with recipient address and ETH amount
+
+**On-Chain:**
+```solidity
+MultisigWallet.submitTransaction(to, value, data)
+  → Creates transaction with ID
+  → Stores: destination, amount, data, status = pending
+  → Auto-approves from submitter
+```
+
+**Result:** Transaction awaits additional approvals (1 of N collected)
+
+---
+
+### 3. Approval Collection
+
+**User Action:** Other owners review and approve the transaction
+
+**On-Chain:**
+```solidity
+MultisigWallet.approveTransaction(txId)
+  → Checks: msg.sender is owner
+  → Prevents: duplicate approvals
+  → Increments approval count
+```
+
+**Result:** Approval count increases (e.g., 2 of 3, 3 of 5)
+
+---
+
+### 4. Execution
+
+**User Action:** Any owner triggers execution once threshold is met
+
+**On-Chain:**
+```solidity
+MultisigWallet.executeTransaction(txId)
+  → Validates: approvals >= threshold
+  → Marks: status = executed
+  → Transfers: ETH to recipient (with reentrancy protection)
+  → Prevents: double execution
+```
+
+**Result:** Funds transferred, transaction marked executed permanently
+
+---
+
+## Security Design
+
+### Why These Patterns?
+
+**1. Reentrancy Guard**
+- **Risk:** Malicious contracts calling back during execution
+- **Protection:** OpenZeppelin ReentrancyGuard on `executeTransaction()`
+- **Result:** Execution completes atomically, no reentry possible
+
+**2. Threshold Validation**
+- **Risk:** Executing with insufficient approvals
+- **Protection:** Require `approvals >= threshold` before execution
+- **Result:** Enforces M-of-N rule at contract level
+
+**3. Owner-Only Submission**
+- **Risk:** External actors creating spam transactions
+- **Protection:** `onlyOwner` modifier on `submitTransaction()`
+- **Result:** Only authorized owners can propose
+
+**4. No Duplicate Approvals**
+- **Risk:** One owner approving multiple times to meet threshold
+- **Protection:** Mapping tracks approvals per owner per transaction
+- **Result:** Each owner approves once maximum
+
+**5. Execute Once**
+- **Risk:** Re-executing completed transactions
+- **Protection:** Boolean flag `executed` + status check
+- **Result:** Transaction executes exactly once
+
+**6. No Proxy/Upgradeable Pattern**
+- **Design Choice:** Immutable contracts for maximum trust
+- **Trade-off:** No upgrades, but no hidden backdoors
+- **Result:** What you audit is what runs forever
+
+---
+
+## Local Setup
+
+### Prerequisites
+
+- Node.js 18+
+- MetaMask browser extension
+- Git
+
+### Installation
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/cosign.git
+cd cosign
+
+# Install contract dependencies
+cd contracts
+npm install
+
+# Install frontend dependencies
+cd ../frontend
+npm install
+```
+
+### Running Locally
+
+**Terminal 1 - Start local blockchain:**
+```bash
+cd contracts
+npx hardhat node
+```
+
+**Terminal 2 - Deploy contracts:**
+```bash
+cd contracts
+npx hardhat run scripts/deploy.ts --network localhost
+```
+
+Copy the deployed `MultisigFactory` address to `frontend/lib/addresses.ts`:
+
+```typescript
+export const FACTORY_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+```
+
+**Terminal 3 - Start frontend:**
+```bash
+cd frontend
+npm run dev
+```
+
+### Connect MetaMask
+
+1. Open MetaMask
+2. Add Network:
+   - Network Name: `Localhost`
+   - RPC URL: `http://127.0.0.1:8545`
+   - Chain ID: `31337`
+   - Currency: `ETH`
+3. Import test account from Hardhat node output
+4. Visit `http://localhost:3000`
+
+---
+
+## Tech Stack
+
+**Smart Contracts:**
+- Solidity 0.8.27
+- Hardhat development environment
+- OpenZeppelin contracts (ReentrancyGuard)
+- ethers.js for deployment scripts
+
+**Frontend:**
+- Next.js 15 (App Router)
+- TypeScript 5
+- Tailwind CSS + custom dark theme
+- ethers.js v6
+- Vercel Analytics
+
+**Network Support:**
+- Localhost (31337) - Development
+- Sepolia (11155111) - Testnet
 
 ---
 
@@ -82,67 +256,34 @@ MultisigWallet.sol → Manages transactions + approvals
 
 ```
 cosign/
-├── contracts/          # Solidity contracts + Hardhat
-├── frontend/           # Next.js app
-└── docs/              # Documentation
+├── contracts/
+│   ├── contracts/
+│   │   ├── MultisigFactory.sol
+│   │   └── MultisigWallet.sol
+│   ├── scripts/deploy.ts
+│   ├── test/
+│   └── hardhat.config.ts
+├── frontend/
+│   ├── app/               # Next.js pages
+│   ├── components/        # React components
+│   ├── lib/
+│   │   ├── abis/          # Contract ABIs
+│   │   ├── wallet-context.tsx
+│   │   └── addresses.ts
+│   └── public/
+└── README.md
 ```
 
 ---
 
-## Security
 
-⚠️ **This code has NOT been audited. Use at your own risk.**
+## Use Cases
 
-**Security features implemented:**
-- Reentrancy guard on execution
-- Owner-only transaction submission
-- Threshold validation
-- No duplicate approvals
-- Execute once per transaction
-
-**Before mainnet deployment:**
-- Get professional audit
-- Test thoroughly on testnets
-- Review all contract code
-- Use hardware wallets for owner keys
-
----
-
-## Documentation
-
-- **[Setup Guide](docs/setup.md)** - Installation and deployment
-- **[Architecture](docs/architecture.md)** - System design and data flow
-- **[Smart Contracts](docs/smart-contracts.md)** - Contract details and API
-- **[Frontend](docs/frontend.md)** - React components and state management
-
----
-
-## Tech Stack
-
-**Contracts:**
-- Solidity 0.8.27
-- Hardhat
-- OpenZeppelin (ReentrancyGuard)
-
-**Frontend:**
-- Next.js 15 (App Router)
-- TypeScript
-- Tailwind CSS
-- ethers.js v6
-
----
-
-## Networks
-
-Currently supports:
-- **Localhost** (31337) - Development
-- **Sepolia** (11155111) - Testnet
-
----
-
-## License
-
-MIT
+- **DAO Treasuries** - Require board approval before spending
+- **Startup Funds** - Co-founders share custody of company ETH
+- **Personal Security** - Split keys across devices/locations
+- **Joint Accounts** - Shared control for partners/teams
+- **Escrow Services** - Buyer + seller + arbiter = 2-of-3
 
 ---
 
